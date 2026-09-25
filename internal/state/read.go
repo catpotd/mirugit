@@ -120,9 +120,6 @@ func WriteSnapshot(encoded []byte, path string) error {
 }
 
 func (r *ReadState) Save() error {
-	if err := os.MkdirAll(filepath.Dir(r.path), 0o755); err != nil {
-		return err
-	}
 	encoded, err := json.Marshal(r)
 	if err != nil {
 		return err
@@ -133,10 +130,14 @@ func (r *ReadState) Save() error {
 // writeAtomic replaces path in one step. Writing in place leaves a half-written
 // file if the process ends mid-write, and LoadRead then drops every mark.
 func writeAtomic(encoded []byte, path string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".read-*.json")
+	if err := os.Chmod(dir, 0o700); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(dir, ".read-*.json")
 	if err != nil {
 		return err
 	}
@@ -150,7 +151,7 @@ func writeAtomic(encoded []byte, path string) error {
 		_ = os.Remove(name)
 		return err
 	}
-	if err := os.Chmod(name, 0o644); err != nil {
+	if err := os.Chmod(name, 0o600); err != nil {
 		_ = os.Remove(name)
 		return err
 	}

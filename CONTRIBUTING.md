@@ -38,7 +38,7 @@ make ci-local
 `make ci-local` runs every CI gate on this machine and in a Linux container.
 Docker must be running for the Linux checks.
 
-The repository's `ci` workflow is currently disabled in GitHub settings. Run
+GitHub runs the `ci` workflow for pull requests and pushes to `main`. Run
 `make ci-local` before opening a pull request. The commands below let you rerun
 one gate at a time:
 
@@ -116,6 +116,6 @@ exceptions are:
 
 ## Releasing (maintainers)
 
-Pushing a `v*` tag starts the release workflow. Before tagging, run
-`make ci-local` and confirm the working tree is clean. Review the generated
-release notes before publishing.
+Pushing a `v*` tag starts a draft release. Before tagging, run `make ci-local`
+and confirm the working tree is clean. Review the generated release notes and
+artifacts, then publish the draft release.

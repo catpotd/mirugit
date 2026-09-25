@@ -4,9 +4,8 @@ A terminal pane that shows what a git repository currently holds, and lets you
 act on it with one key.
 
 It also keeps your place. Diff blocks you have been shown are marked read. The
-history tab shows the first name in any `Co-authored-by` trailer and counts
-additional names, so you can review collaborative changes without losing your
-place.
+history tab shows the Git author for each commit, so you can review changes
+without losing your place.
 
 ```
  changes 4   history 3   stashed 2   worktrees 2          main   fetched 3m ago
@@ -33,7 +32,7 @@ Four tabs over one repository:
 | Tab | Shows | Acts |
 |---|---|---|
 | changes | staged and unstaged files, grouped by directory | stage, unstage, discard, stash, commit |
-| history | commits, with the files each one touched and the first `Co-authored-by` trailer value plus a count of the rest | diff, copy SHA, open a pushed commit on the remote, undo the newest unpushed one |
+| history | commits, with the files each one touched and the Git author name | diff, copy SHA, open a pushed commit on the remote, undo the newest unpushed one |
 | stashed | stashes and the files inside them | restore and drop, or branch and drop when the stash would conflict |
 | worktrees | worktrees and how far each has diverged | go, remove |
 

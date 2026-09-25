@@ -7,6 +7,36 @@ import (
 	"testing"
 )
 
+func TestSaveUsesPrivateStatePermissions(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	dir := filepath.Join(root, "repo")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(dir, "read.json")
+	r := &ReadState{path: file, Finished: map[string]bool{}, Blocks: map[string]bool{}}
+
+	if err := r.Save(); err != nil {
+		t.Fatal(err)
+	}
+
+	dirInfo, err := os.Stat(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := dirInfo.Mode().Perm(); got != 0o700 {
+		t.Errorf("directory mode = %v, want 0700", got)
+	}
+	fileInfo, err := os.Stat(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := fileInfo.Mode().Perm(); got != 0o600 {
+		t.Errorf("file mode = %v, want 0600", got)
+	}
+}
+
 // Writing in place leaves a half-written file if the process ends mid-write,
 // and LoadRead drops every mark when it cannot parse the file. Rename replaces
 // it in one step, so an interrupted save leaves the previous marks readable.
@@ -45,8 +75,8 @@ func TestSaveReplacesTheFileInOneStep(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info.Mode().Perm() != 0o644 {
-		t.Errorf("mode = %v, want 0644", info.Mode().Perm())
+	if info.Mode().Perm() != 0o600 {
+		t.Errorf("mode = %v, want 0600", info.Mode().Perm())
 	}
 
 	// The file is never opened for writing in place, so a reader that opens it

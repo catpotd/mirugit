@@ -100,10 +100,9 @@ func contains(list []string, want string) bool {
 	return false
 }
 
-// make ci-local runs the same gates here, because GitHub is not running the
-// workflow this month. A gate added to ci.yml and not to CI_GATES leaves the
-// local run short of what the workflow would have caught, and the workflow is
-// disabled, so nothing else would say so.
+// make ci-local runs the same gates here so a contributor can reproduce the
+// workflow before opening a pull request. A gate added to ci.yml and not to
+// CI_GATES leaves the local run short of what the workflow would catch.
 //
 // It compares against CI_GATES rather than against the block CONTRIBUTING
 // holds: that block is what a contributor pastes, and this is what a command
