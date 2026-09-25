@@ -1,0 +1,46 @@
+name: Bug
+description: Something the pane does that it should not
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: >
+        The keys or clicks in order, and what the pane did. A pasted screen is
+        worth more than a description of it.
+      placeholder: |
+        On the changes tab I pressed d on a staged file, then s.
+        The footer said "staged 1 file" but the row stayed under unstaged.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `mirugit -version`.
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: OS, terminal, and git version
+      placeholder: macOS 15.5, Ghostty 1.1, git 2.50.1
+    validations:
+      required: true
+  - type: textarea
+    id: repo
+    attributes:
+      label: Repository state
+      description: >
+        What the repository held when it happened — staged and unstaged files,
+        a stash, a linked worktree. The commands that reproduce it from an
+        empty repository are the most useful form.
+      render: shell

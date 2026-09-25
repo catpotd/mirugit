@@ -1,0 +1,63 @@
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - unconvert
+    - bodyclose
+    - nilerr
+    - errorlint
+    - unparam
+    - exhaustive
+    - gocritic
+    - nilnil
+    - prealloc
+  settings:
+    exhaustive:
+      # A default arm absorbs a value added later without anyone deciding what
+      # it should do there, which is the failure this rule exists to catch. Every
+      # switch names every value; the arm that does nothing says so by name.
+      default-signifies-exhaustive: false
+      # TabCount is the length of the TabCursors array, not a tab.
+      ignore-enum-members: TabCount$
+      # Maps keyed by an enum are dispatch tables too.
+      check:
+        - switch
+        - map
+      # reflect.Kind and go/token.Token belong to the standard library and are
+      # switched on by shape rather than by member; naming eighty would say
+      # nothing.
+      ignore-enum-types: ^(reflect\.Kind|go/token\.Token)$
+    misspell:
+      locale: US
+    unparam:
+      # Exported functions are off by default, and both dead parameters this
+      # found were on exported functions: FillWorktreeStatus never read mainDir
+      # and StashStatusOf never read head.
+      check-exported: true
+    staticcheck:
+      # ST1003 and ST1016 are naming and receiver-name opinions this project
+      # does not share. The rest hold, including ST1000 and ST1020 to ST1022,
+      # which require a doc comment to open with the name it declares.
+      checks:
+        - all
+        - -ST1003
+        - -ST1016
+  exclusions:
+    rules:
+      # Every bubbletea handler returns (tea.Model, tea.Cmd) so Update can
+      # dispatch them one way. Three of them have nothing to schedule today;
+      # narrowing those three would make the dispatch read three ways.
+      - path: internal/tui/
+        linters:
+          - unparam
+        text: "bubbletea/v2.Cmd\\) is always nil"
+
+formatters:
+  enable:
+    - gofmt

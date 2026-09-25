@@ -1,0 +1,4 @@
+go test fuzz v1
+string("\x9d0\x9b0\xa8\x90\x95\x12000\xf60\xa50\x1e0")
+string("\xd8")
+int(44)

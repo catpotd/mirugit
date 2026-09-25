@@ -1,0 +1,29 @@
+name: Feature
+description: A verb or a view the pane does not have
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you are trying to do
+      description: >
+        The task, not the feature. mirugit shows one repository and acts on the
+        row under the cursor; a proposal that fits that shape is easier to
+        answer than one that describes a control.
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How you do it today
+      description: The git commands, or the other tool.
+    validations:
+      required: true
+  - type: textarea
+    id: shape
+    attributes:
+      label: What it would look like in the pane
+      description: >
+        Which tab, which row, which key, and what the footer would say. The
+        footer only names verbs that can be pressed on the row under the
+        cursor, so a new verb has to say when it is offered.

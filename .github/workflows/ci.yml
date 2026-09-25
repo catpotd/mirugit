@@ -1,0 +1,70 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: true
+      - name: Identify the test committer
+        run: |
+          git config --global user.email ci@example.com
+          git config --global user.name CI
+      # make check is what contributors run locally. Calling it here rather
+      # than listing the same gates again keeps one answer to "what has to
+      # pass", and pins the linter version in the Makefile alone.
+      - run: make check
+
+  # Commands run on their own goroutines and the watcher holds a reader, so the
+  # failures worth catching are the ones only the detector sees. It runs beside
+  # check rather than inside it: 1m57 against 2m03 doubles the wall clock when
+  # the two share a job.
+  race:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: true
+      - name: Identify the test committer
+        run: |
+          git config --global user.email ci@example.com
+          git config --global user.name CI
+      - run: make test-race
+
+  # Every parser here reads bytes git printed, and git's output depends on the
+  # repository. Two panics in parseStatus were found this way, on records a
+  # truncated read produces.
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: true
+      - run: make fuzz FUZZTIME=30s
+
+  # go.mod called uniseg indirect while layout/width.go imported it directly,
+  # and nothing said so for as long as the file existed.
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: true
+      - run: make supply-chain

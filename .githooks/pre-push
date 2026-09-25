@@ -1,0 +1,29 @@
+#!/bin/sh
+# Fails rather than rewrites, the same as pre-commit.
+#
+# check alone, not the four gates ci-local runs. Measured on this machine:
+# check 74s, test-race 114s, fuzz 316s (thirty seconds times ten targets),
+# supply-chain 8s. That is 512 seconds for one platform and about seventeen
+# minutes with Linux beside it, which is long enough that --no-verify becomes
+# the habit and the hook stops running at all.
+#
+# check rather than quick, which is 32s: quick passes -short, and -short skips
+# every test that shells out to git. The defects this repository actually
+# produced — a read that emptied the file list, an undo ref that overwrote
+# itself, a command printed for the wrong operation — were all caught by those.
+# Half the time for none of the coverage that matters is the wrong trade.
+#
+# Run make ci-local before opening a pull request. GitHub is not running the
+# workflow this month; CONTRIBUTING says why.
+git_env_vars=$(git rev-parse --local-env-vars) || {
+	printf '%s\n' 'pre-push: could not list Git-local environment variables' >&2
+	exit 1
+}
+[ -n "$git_env_vars" ] || {
+	printf '%s\n' 'pre-push: Git returned no local environment variables' >&2
+	exit 1
+}
+for name in $git_env_vars; do
+	unset "$name" || exit 1
+done
+exec make check

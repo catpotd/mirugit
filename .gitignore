@@ -1,0 +1,13 @@
+bin/
+/.ci-cache/
+graphify-out/
+.superpowers/
+.impl/
+.agents/
+.cursor/
+.claude/
+*.py[cod]
+
+# go test -c and -coverprofile leave these next to the package.
+*.test
+cover.out

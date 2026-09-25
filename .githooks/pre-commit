@@ -1,0 +1,4 @@
+#!/bin/sh
+# Fails rather than rewrites: a hook that edits files would commit something
+# other than what was reviewed.
+exec make fmt vet
