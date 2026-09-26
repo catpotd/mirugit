@@ -7,19 +7,7 @@ It also keeps your place. Diff blocks you have been shown are marked read. The
 history tab shows the Git author for each commit, so you can review changes
 without losing your place.
 
-```
- changes 4   history 3   stashed 2   worktrees 2          main   fetched 3m ago
-      staged · 1 file · +7 −1
-      ▾ internal/layout                                                   1
-       M  pane_changes.go                                          +7     −1
-    ·  M  pane_history.go                                         +45     −1
-▌[ ]·  M  cmd/mirugit/main.go                   s stage  x discard  z stash
-    ·  ?  README.md                                                +119     −0
-main.go                                     block 1/6 · 5 unread     esc close
-       block 1/6                                                        +2 −0
-    ▌  block 2/6                                         s stage        +5 −1
-           space select · s stage · x discard · z stash · d diff · r read   ?
-```
+![mirugit changes, diff, stage, and history workflow](assets/demo.gif)
 
 Every verb the footer prints is a key you can press on the row the cursor is
 on. Nothing is offered that cannot be pressed, and nothing that can be pressed
