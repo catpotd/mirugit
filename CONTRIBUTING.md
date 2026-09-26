@@ -77,9 +77,9 @@ For a bug fix, include steps that reproduce the original behavior and a test
 that covers the correction when practical.
 
 Use `feature/` for features and `fix/` for fixes, followed by a short
-description. Commit subjects have no required prefix or language. Use a concise
-pull request title; GitHub includes pull request titles in generated release
-notes.
+description. Write commit subjects in English and use a concise prefix such as
+`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, or `chore:`. Use a concise pull
+request title; GitHub includes pull request titles in generated release notes.
 
 ## Project structure
 
