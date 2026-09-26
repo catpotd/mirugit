@@ -88,6 +88,11 @@ func TestStatusWordsKeepColorWhenTheCursorIsElsewhere(t *testing.T) {
 	if !strings.Contains(line, w.Del("conflicts")) {
 		t.Errorf("non-cursor stash conflicts should use Del: %q", line)
 	}
+
+	line, _ = w.StashRow(stashRowLayout{Info: stashRow("msg", git.StashUnrelated)}, paneWidth)
+	if !strings.Contains(line, w.Dim("unrelated")) {
+		t.Errorf("non-cursor unrelated should use Dim: %q", line)
+	}
 }
 
 func TestColorDiffEmptyContextLineKeepsFaintNumber(t *testing.T) {
@@ -137,6 +142,10 @@ func TestConflictsAndMergesUseDelAndAdd(t *testing.T) {
 		Info:  stashRow("msg", git.StashConflicts),
 		State: stashRowState{Cursor: true},
 	}, paneWidth)
+	unrelatedLine, _ := w.StashRow(stashRowLayout{
+		Info:  stashRow("msg", git.StashUnrelated),
+		State: stashRowState{Cursor: true},
+	}, paneWidth)
 
 	if !strings.Contains(mergeLine, w.Add("merges")) {
 		t.Errorf("merges should use Add: %q", mergeLine)
@@ -161,6 +170,12 @@ func TestConflictsAndMergesUseDelAndAdd(t *testing.T) {
 	}
 	if strings.Contains(conflictsLine, w.Dim("conflicts")) {
 		t.Errorf("stash conflicts should not use Dim: %q", conflictsLine)
+	}
+	if !strings.Contains(unrelatedLine, w.Dim("unrelated")) {
+		t.Errorf("unrelated should use Dim: %q", unrelatedLine)
+	}
+	if strings.Contains(unrelatedLine, w.Add("unrelated")) || strings.Contains(unrelatedLine, w.Del("unrelated")) {
+		t.Errorf("unrelated should not use Add or Del: %q", unrelatedLine)
 	}
 }
 

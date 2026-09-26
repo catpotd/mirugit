@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -1211,6 +1212,61 @@ func TestScenarioStashedTabListsAndReadsAStash(t *testing.T) {
 	}
 }
 
+func TestScenarioUnrelatedStashIsVisibleAndOffersSafeRecovery(t *testing.T) {
+	t.Parallel()
+	if testing.Short() {
+		t.Skip("shells out to git")
+	}
+	s := newScenario(t, repoWithUnrelatedStash(t))
+	s.tab('3')
+	screen := strings.Join(s.screen(), "\n")
+	if !strings.Contains(screen, "unrelated") {
+		t.Fatalf("the stash does not explain its history:\n%s", screen)
+	}
+	if strings.Contains(screen, "refusing to merge unrelated histories") {
+		t.Fatalf("the Git diagnostic replaced the stash row:\n%s", screen)
+	}
+	if s.m.state.Notice != "" {
+		t.Fatalf("unrelated history became a failure notice: %q", s.m.state.Notice)
+	}
+	row := s.screen()[headingRow(s, "hold")]
+	if strings.Contains(row, "restore") {
+		t.Errorf("unrelated stash offers restore: %q", row)
+	}
+	for _, verb := range []string{"branch", "drop"} {
+		if !strings.Contains(row, verb) {
+			t.Errorf("unrelated stash does not offer %s: %q", verb, row)
+		}
+	}
+	if got := strings.TrimSpace(gitOutput(t, s.dir, "status", "--porcelain")); got != "" {
+		t.Errorf("opening the tab changed the worktree: %q", got)
+	}
+	if got := strings.TrimSpace(gitOutput(t, s.dir, "stash", "list")); got == "" {
+		t.Error("opening the tab removed the stash")
+	}
+}
+
+func repoWithUnrelatedStash(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	run, write := gitRunner(t, dir)
+	run("init", "-q", "-b", "main")
+	write("f.txt", "base\n")
+	run("add", "f.txt")
+	run("commit", "-q", "-m", "base")
+	write("f.txt", "stashed\n")
+	run("stash", "push", "-q", "-m", "hold")
+	run("checkout", "-q", "--orphan", "other")
+	run("read-tree", "--empty")
+	if err := os.Remove(filepath.Join(dir, "f.txt")); err != nil {
+		t.Fatal(err)
+	}
+	write("z.txt", "other\n")
+	run("add", "z.txt")
+	run("commit", "-q", "-m", "other")
+	return dir
+}
+
 func headingRow(s *scenario, want string) int {
 	s.t.Helper()
 	for i, line := range s.screen() {
@@ -1478,11 +1534,14 @@ func gitOutput(t *testing.T, dir string, args ...string) string {
 		"GIT_CONFIG_KEY_0=gc.auto", "GIT_CONFIG_VALUE_0=0",
 		"GIT_CONFIG_KEY_1=maintenance.auto", "GIT_CONFIG_VALUE_1=false",
 	}
-	out, err := cmd.CombinedOutput()
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
 	if err != nil {
-		t.Fatalf("git %v: %v\n%s", args, err, out)
+		t.Fatalf("git %v: %v\n%s%s", args, err, stdout.Bytes(), stderr.Bytes())
 	}
-	return string(out)
+	return stdout.String()
 }
 
 // A commit's file rows have to say how big each change was and what happened

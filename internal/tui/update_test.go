@@ -464,6 +464,7 @@ func TestAStashVerbRunsOnlyWhereTheStashOffersIt(t *testing.T) {
 	}{
 		{"a stash that applies", git.StashApplies, false, true, false},
 		{"a stash that would conflict", git.StashConflicts, false, false, true},
+		{"a stash from an unrelated history", git.StashUnrelated, false, false, true},
 		{"a stash with no verdict yet", git.StashUnknown, false, false, false},
 		{"no stash under the cursor", git.StashApplies, true, false, false},
 	} {

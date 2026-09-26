@@ -97,7 +97,7 @@ func footerVerbUnionForTab(tab state.Tab, w Renderer) map[state.VerbName]bool {
 		add(state.CommitVerbs(git.CommitInfo{}, 1, tools))
 		add([]state.VerbName{state.VerbNameDiff})
 	case state.TabStashed:
-		for _, status := range []git.StashStatus{git.StashApplies, git.StashConflicts} {
+		for _, status := range []git.StashStatus{git.StashApplies, git.StashConflicts, git.StashUnrelated} {
 			add(state.StashVerbs(status))
 		}
 		allowed[state.VerbNameDiff] = true

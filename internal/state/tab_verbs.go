@@ -7,13 +7,14 @@ import (
 	"github.com/catpotd/mirugit/internal/git"
 )
 
-// StashVerbs returns the verbs a stash row can show. Conflicts offer branch
-// before restore would leave a dirty tree that the pane cannot finish.
+// StashVerbs returns the verbs a stash row can show. Conflicting and unrelated
+// histories offer branch before restore would leave a dirty tree that the pane
+// cannot finish.
 func StashVerbs(status git.StashStatus) []VerbName {
 	switch status {
 	case git.StashApplies:
 		return []VerbName{VerbNameRestore, VerbNameDrop}
-	case git.StashConflicts:
+	case git.StashConflicts, git.StashUnrelated:
 		return []VerbName{VerbNameBranch, VerbNameDrop}
 	case git.StashUnknown:
 	}

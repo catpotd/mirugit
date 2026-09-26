@@ -44,6 +44,9 @@ func TestStashRowSurvivesEveryPaneWidth(t *testing.T) {
 		{Info: stashRow("wip", git.StashApplies),
 			State: stashRowState{Cursor: true},
 			Verbs: []state.VerbName{state.VerbNameRestore, state.VerbNameDrop}},
+		{Info: stashRow("unrelated stash", git.StashUnrelated),
+			State: stashRowState{Cursor: true},
+			Verbs: state.StashVerbs(git.StashUnrelated)},
 	}
 	for _, c := range cases {
 		for width := 1; width <= 80; width++ {
@@ -51,6 +54,27 @@ func TestStashRowSurvivesEveryPaneWidth(t *testing.T) {
 			if width >= 40 && w.Of(line) != width {
 				t.Fatalf("width %d: %q is %d cells, want %d", width, line, w.Of(line), width)
 			}
+		}
+	}
+}
+
+func TestUnrelatedStashRowExplainsItsRecoveryOptions(t *testing.T) {
+	t.Parallel()
+	w := Renderer{}
+	line, _ := w.StashRow(stashRowLayout{
+		Info:  stashRow("hold", git.StashUnrelated),
+		State: stashRowState{Cursor: true},
+		Verbs: state.StashVerbs(git.StashUnrelated),
+	}, paneWidth)
+	if !strings.Contains(line, "unrelated") {
+		t.Fatalf("row does not show unrelated: %q", line)
+	}
+	if strings.Contains(line, "restore") {
+		t.Fatalf("row offers restore: %q", line)
+	}
+	for _, verb := range []string{"branch", "drop"} {
+		if !strings.Contains(line, verb) {
+			t.Errorf("row does not offer %s: %q", verb, line)
 		}
 	}
 }

@@ -21,13 +21,17 @@ Four tabs over one repository:
 |---|---|---|
 | changes | staged and unstaged files, grouped by directory | stage, unstage, discard, stash, commit |
 | history | commits, with the files each one touched and the Git author name | diff, copy SHA, open a pushed commit on the remote, undo the newest unpushed one |
-| stashed | stashes and the files inside them | restore and drop, or branch and drop when the stash would conflict |
+| stashed | stashes and the files inside them | restore and drop, or branch and drop when the stash would conflict or come from an unrelated history |
 | worktrees | worktrees and how far each has diverged | go, remove |
 
 Diffs open in the same pane, one block at a time. Blocks you have read are
 marked, so returning to a file tells you where you stopped. When a file changes
 on disk while its diff is open, the row says `stale · R reload` rather than
 showing you a diff that no longer matches the repository.
+
+A stashed row marked `unrelated` comes from a history that cannot be compared
+with the current `HEAD`. mirugit keeps the stash, withholds restore, and leaves
+branch and drop available.
 
 The pane watches the repository and redraws when it changes. It writes to the
 repository only when you press a key that says it will. At startup it also
