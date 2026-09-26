@@ -17,6 +17,10 @@ jobs:
         with:
           go-version: stable
           cache: true
+      - name: Identify the test committer
+        run: |
+          git config --global user.email ci@example.com
+          git config --global user.name CI
       - run: make check
       - run: make test-race
       - run: make fuzz FUZZTIME=30s
