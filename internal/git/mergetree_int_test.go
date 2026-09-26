@@ -169,10 +169,14 @@ func TestStashConflictPathsSkipsThePathAlreadyAtStashContent(t *testing.T) {
 	runGit(t, dir, "add", "c.txt")
 	runGit(t, dir, "stash", "push", "-q", "-m", "partial", "--", "a.txt")
 
-	paths, err := stashConflictPaths(context.Background(), dir, "stash@{0}")
+	result, err := stashConflictResultOf(context.Background(), dir, "stash@{0}")
 	if err != nil {
 		t.Fatal(err)
 	}
+	if result.mergeErr != nil && len(result.paths) == 0 {
+		t.Fatal(result.mergeErr)
+	}
+	paths := result.paths
 	if len(paths) != 0 {
 		t.Fatalf("paths = %v, want none", paths)
 	}
@@ -196,10 +200,14 @@ func TestStashConflictPathsNamesThePathEditedInTheTree(t *testing.T) {
 	if err := os.WriteFile(dir+"/a.txt", []byte("local\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	paths, err := stashConflictPaths(context.Background(), dir, "stash@{0}")
+	result, err := stashConflictResultOf(context.Background(), dir, "stash@{0}")
 	if err != nil {
 		t.Fatal(err)
 	}
+	if result.mergeErr != nil && len(result.paths) == 0 {
+		t.Fatal(result.mergeErr)
+	}
+	paths := result.paths
 	if len(paths) != 1 || paths[0] != "a.txt" {
 		t.Fatalf("paths = %v, want [a.txt]", paths)
 	}
@@ -218,10 +226,14 @@ func TestStashConflictPathsNamesTheUntrackedFileThatExists(t *testing.T) {
 	if err := os.WriteFile(dir+"/new.txt", []byte("blocking\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	paths, err := stashConflictPaths(context.Background(), dir, "stash@{0}")
+	result, err := stashConflictResultOf(context.Background(), dir, "stash@{0}")
 	if err != nil {
 		t.Fatal(err)
 	}
+	if result.mergeErr != nil && len(result.paths) == 0 {
+		t.Fatal(result.mergeErr)
+	}
+	paths := result.paths
 	if len(paths) != 1 || paths[0] != "new.txt" {
 		t.Fatalf("paths = %v, want [new.txt]", paths)
 	}
@@ -250,10 +262,14 @@ func TestStashConflictPathsListsAPathOnce(t *testing.T) {
 	if err := os.WriteFile(dir+"/a.txt", []byte("local2\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	paths, err := stashConflictPaths(context.Background(), dir, "stash@{0}")
+	result, err := stashConflictResultOf(context.Background(), dir, "stash@{0}")
 	if err != nil {
 		t.Fatal(err)
 	}
+	if result.mergeErr != nil && len(result.paths) == 0 {
+		t.Fatal(result.mergeErr)
+	}
+	paths := result.paths
 	if len(paths) != 1 || paths[0] != "a.txt" {
 		t.Fatalf("paths = %v, want [a.txt]", paths)
 	}
@@ -273,6 +289,74 @@ func TestMergeTreeFailureWithoutConflictIsNotStashConflicts(t *testing.T) {
 	if status == StashConflicts {
 		t.Fatalf("want not StashConflicts on merge-tree failure, got %v", status)
 	}
+}
+
+func TestUnrelatedStashHistoryIsUnrelated(t *testing.T) {
+	t.Parallel()
+	if testing.Short() {
+		t.Skip("shells out to git")
+	}
+	dir := repoWithUnrelatedStash(t, false)
+
+	status, paths, err := stashStatusOf(context.Background(), dir, "stash@{0}")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status != StashUnrelated {
+		t.Fatalf("status = %v, want StashUnrelated", status)
+	}
+	if len(paths) != 0 {
+		t.Fatalf("paths = %v, want none", paths)
+	}
+}
+
+func TestUnrelatedStashHistoryWithEditedPathIsUnrelated(t *testing.T) {
+	t.Parallel()
+	if testing.Short() {
+		t.Skip("shells out to git")
+	}
+	dir := repoWithUnrelatedStash(t, true)
+
+	status, paths, err := stashStatusOf(context.Background(), dir, "stash@{0}")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status != StashUnrelated {
+		t.Fatalf("status = %v, want StashUnrelated", status)
+	}
+	if len(paths) != 0 {
+		t.Fatalf("paths = %v, want none", paths)
+	}
+}
+
+func repoWithUnrelatedStash(t *testing.T, keepPath bool) string {
+	t.Helper()
+	dir := newRepo(t)
+	env := gitTestEnv(dir)
+	if err := os.WriteFile(dir+"/f.txt", []byte("base\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	runGitTest(t, env, dir, "add", "f.txt")
+	runGitTest(t, env, dir, "commit", "-q", "-m", "base")
+	if err := os.WriteFile(dir+"/f.txt", []byte("stashed\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	runGitTest(t, env, dir, "stash", "push", "-q", "-m", "hold")
+	runGitTest(t, env, dir, "checkout", "-q", "--orphan", "other")
+	runGitTest(t, env, dir, "read-tree", "--empty")
+	if keepPath {
+		if err := os.WriteFile(dir+"/f.txt", []byte("local\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	} else if err := os.Remove(dir + "/f.txt"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dir+"/z.txt", []byte("other\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	runGitTest(t, env, dir, "add", "z.txt")
+	runGitTest(t, env, dir, "commit", "-q", "-m", "other")
+	return dir
 }
 
 func TestStashConflictsAlwaysNamesAFile(t *testing.T) {
@@ -389,10 +473,14 @@ func TestStashConflictPathsNamesThePathStagedAtStashContentAndEditedAfter(t *tes
 		t.Fatal(err)
 	}
 
-	paths, err := stashConflictPaths(context.Background(), dir, "stash@{0}")
+	result, err := stashConflictResultOf(context.Background(), dir, "stash@{0}")
 	if err != nil {
 		t.Fatal(err)
 	}
+	if result.mergeErr != nil && len(result.paths) == 0 {
+		t.Fatal(result.mergeErr)
+	}
+	paths := result.paths
 	if len(paths) != 1 || paths[0] != "a.txt" {
 		t.Fatalf("paths = %v, want [a.txt]", paths)
 	}

@@ -11,13 +11,14 @@ import (
 )
 
 // StashStatus is whether a stash can pop onto the current HEAD. Unknown means
-// the untracked side has not been checked yet, because merge-tree alone lies.
+// the answer could not be established, because merge-tree alone lies.
 type StashStatus int
 
 const (
 	StashUnknown StashStatus = iota
 	StashApplies
 	StashConflicts
+	StashUnrelated
 )
 
 // StashRow is one entry in the stashed tab.

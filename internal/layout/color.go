@@ -162,6 +162,7 @@ func (w Renderer) colorStatusWords(line string) string {
 	line = replaceOnce(line, "conflicts", p.Del("conflicts"))
 	line = replaceOnce(line, "merges", p.Add("merges"))
 	line = replaceOnce(line, "applies", p.Add("applies"))
+	line = replaceOnce(line, "unrelated", p.Dim("unrelated"))
 	return line
 }
 

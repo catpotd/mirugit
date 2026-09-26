@@ -11,14 +11,36 @@ import (
 // stashStatusOf decides whether a stash can pop onto the current HEAD, because
 // merge-tree alone misses untracked parents and working-tree edits.
 func stashStatusOf(ctx context.Context, dir, ref string) (StashStatus, []string, error) {
-	paths, err := stashConflictPaths(ctx, dir, ref)
+	result, err := stashConflictResultOf(ctx, dir, ref)
 	if err != nil {
 		return StashUnknown, nil, err
 	}
-	if len(paths) > 0 {
-		return StashConflicts, paths, nil
+	if isUnrelatedHistoryError(result.mergeErr) {
+		return StashUnrelated, nil, nil
+	}
+	if len(result.paths) > 0 {
+		return StashConflicts, result.paths, nil
+	}
+	if result.mergeErr != nil {
+		return StashUnknown, nil, result.mergeErr
 	}
 	return StashApplies, nil, nil
+}
+
+const unrelatedHistoryMessage = "fatal: refusing to merge unrelated histories"
+
+func isUnrelatedHistoryError(err error) bool {
+	var exit *ExitError
+	if !errors.As(err, &exit) || exit.Killed() || exit.Code != 128 {
+		return false
+	}
+	if len(exit.Args) != 4 || exit.Args[0] != "merge-tree" || exit.Args[1] != "--write-tree" {
+		return false
+	}
+	if exit.Args[2] == "" || exit.Args[3] == "" {
+		return false
+	}
+	return strings.TrimSpace(exit.Stderr) == unrelatedHistoryMessage
 }
 
 // stashEditedConflictPaths names stash paths the working tree already changed.
@@ -254,32 +276,34 @@ func appendConflictPaths(seen map[string]bool, paths []string, more []string) []
 	return paths
 }
 
-// stashConflictPaths names the paths that would collide, so a row can say which
-// file is the problem rather than only that there is one.
-func stashConflictPaths(ctx context.Context, dir, ref string) ([]string, error) {
+type stashConflictResult struct {
+	paths    []string
+	mergeErr error
+}
+
+// stashConflictResultOf names the paths that would collide and retains a
+// merge-tree failure so the caller can distinguish a conflict from no answer.
+func stashConflictResultOf(ctx context.Context, dir, ref string) (stashConflictResult, error) {
 	headSHA, err := headSHA(ctx, dir)
 	if err != nil {
-		return nil, err
+		return stashConflictResult{}, err
 	}
 	merge, err := runMergeTree(ctx, dir, headSHA, ref)
 	if err != nil {
-		return nil, err
+		return stashConflictResult{}, err
 	}
 	paths, seen := merge.Paths, merge.Seen
 	untracked, err := stashUntrackedConflictPaths(ctx, dir, ref)
 	if err != nil {
-		return nil, err
+		return stashConflictResult{}, err
 	}
 	paths = appendConflictPaths(seen, paths, untracked)
 	edited, err := stashEditedConflictPaths(ctx, dir, ref)
 	if err != nil {
-		return nil, err
+		return stashConflictResult{}, err
 	}
 	paths = appendConflictPaths(seen, paths, edited)
-	if merge.Err != nil && len(paths) == 0 {
-		return nil, merge.Err
-	}
-	return paths, nil
+	return stashConflictResult{paths: paths, mergeErr: merge.Err}, nil
 }
 
 // stashUntrackedConflictPaths names untracked paths from the stash that already
