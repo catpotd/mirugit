@@ -17,10 +17,10 @@ import (
 
 const modulePath = "github.com/catpotd/mirugit/"
 
-// layerRank is the order imports may point in: git ← state ← layout ← tui. A
-// package may import one to its left and nothing to its right.
+// layerRank is the order imports may point in: git and update ← state ← layout
+// ← tui. A package may import one to its left and nothing to its right.
 var layerRank = map[string]int{
-	"git": 0, "osproc": 0, "state": 1, "layout": 2, "tui": 3,
+	"git": 0, "osproc": 0, "update": 0, "state": 1, "layout": 2, "tui": 3,
 }
 
 func TestImportsPointOneWay(t *testing.T) {

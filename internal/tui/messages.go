@@ -186,6 +186,10 @@ type fetchedMsg struct {
 	err error
 }
 
+type updateAvailableMsg struct {
+	version string
+}
+
 // failing is a message that can carry a repository error. Every command that
 // talks to git answers with one, and each handler tested it first: twenty-one
 // copies of the same three lines, and a mutation of one of them survived the

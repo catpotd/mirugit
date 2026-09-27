@@ -231,6 +231,9 @@ type BlockCursorSet struct{ Block int }
 // FetchedAgoUpdated sets the label that ages on its own.
 type FetchedAgoUpdated struct{ Label string }
 
+// UpdateAvailable carries a stable release version for the informational notice.
+type UpdateAvailable struct{ Version string }
+
 // HelpScrollClamped sets the help offset to a value layout already bounded.
 type HelpScrollClamped struct{ Scroll int }
 
@@ -383,6 +386,7 @@ func (HelpScrollClamped) event()               {}
 func (ScrollSynced) event()                    {}
 func (BlockCursorSet) event()                  {}
 func (FetchedAgoUpdated) event()               {}
+func (UpdateAvailable) event()                 {}
 func (Resized) event()                         {}
 func (SelectionToggled) event()                {}
 func (SelectionRangeExtended) event()          {}
