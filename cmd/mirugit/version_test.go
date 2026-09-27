@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -34,6 +36,18 @@ func TestVersionFlagDoesNotOpenTheRepository(t *testing.T) {
 	// so this must not fail.
 	if err := run([]string{"-version", "-C", t.TempDir()}, &out, &errOut); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestVersionFlagDoesNotStartUpdateChecking(t *testing.T) {
+	stateHome := t.TempDir()
+	t.Setenv("XDG_STATE_HOME", stateHome)
+	var out, errOut bytes.Buffer
+	if err := run([]string{"-version"}, &out, &errOut); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(stateHome, "mirugit")); !os.IsNotExist(err) {
+		t.Fatalf("version flag created state: %v", err)
 	}
 }
 

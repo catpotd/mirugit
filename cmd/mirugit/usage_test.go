@@ -91,6 +91,11 @@ func environmentNamesInSource(t *testing.T) []string {
 				seen[part[:end]] = true
 			}
 		}
+		for _, part := range strings.Split(string(body), `os.LookupEnv("`)[1:] {
+			if end := strings.Index(part, `"`); end > 0 {
+				seen[part[:end]] = true
+			}
+		}
 		return nil
 	})
 	if err != nil {

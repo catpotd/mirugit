@@ -15,6 +15,7 @@ import (
 
 	"github.com/catpotd/mirugit/internal/osproc"
 	"github.com/catpotd/mirugit/internal/state"
+	"github.com/catpotd/mirugit/internal/update"
 	"github.com/charmbracelet/colorprofile"
 	"github.com/fsnotify/fsnotify"
 )
@@ -64,6 +65,9 @@ type Model struct {
 	// running the tests: measured, one run of the suite opened a tab at the
 	// address the fixture's remote builds.
 	browser func(string) *exec.Cmd
+	// updateCheck is injected so the optional release check can be tested without
+	// starting a network request.
+	updateCheck func(context.Context) (string, error)
 }
 
 // clipboardCommand is what y runs. A Model built as a literal leaves the field
@@ -169,6 +173,22 @@ func New(ctx context.Context, dir, stateDir string) (*Model, error) {
 	}, nil
 }
 
+// NewWithVersion builds the reader and enables the optional release check.
+// MIRUGIT_NO_UPDATE_CHECK disables the check when the variable is present.
+func NewWithVersion(ctx context.Context, dir, stateDir, version string) (*Model, error) {
+	m, err := New(ctx, dir, stateDir)
+	if err != nil {
+		return nil, err
+	}
+	if _, disabled := os.LookupEnv("MIRUGIT_NO_UPDATE_CHECK"); disabled {
+		return m, nil
+	}
+	m.updateCheck = func(checkCtx context.Context) (string, error) {
+		return update.Check(checkCtx, stateDir, version)
+	}
+	return m, nil
+}
+
 func (m *Model) Init() tea.Cmd {
 	// The palette is decided once. NO_COLOR and MIRUGIT_THEME do not change
 	// while the program runs, and colorprofile.Detect allocates os.Environ()
@@ -177,7 +197,7 @@ func (m *Model) Init() tea.Cmd {
 	// Worktrees are loaded here rather than when the tab opens, because the
 	// tab is hidden while its count is zero and would never offer the click
 	// that loads it.
-	return tea.Batch(m.reloadRepo(), loadWorktrees(m.readsForTab(), m.dir), loadFetched(m.readsForTab(), m.dir),
+	return tea.Batch(m.checkForUpdate(), m.reloadRepo(), loadWorktrees(m.readsForTab(), m.dir), loadFetched(m.readsForTab(), m.dir),
 		beginWidthProbe(), beginWatch(m.base, m.dir), m.schedulePoll())
 }
 

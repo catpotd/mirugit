@@ -140,6 +140,11 @@ func (m *Model) updateResult(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleReboundMsg(msg)
 	case fetchedMsg:
 		return m.handleFetchedMsg(msg)
+	case updateAvailableMsg:
+		if msg.version != "" {
+			m.state = state.Apply(m.state, state.UpdateAvailable{Version: msg.version})
+		}
+		return m.finishUpdate(nil)
 	}
 	return m.finishUpdate(nil)
 }

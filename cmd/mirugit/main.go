@@ -73,7 +73,7 @@ func run(args []string, out, errOut io.Writer) error {
 		return err
 	}
 
-	model, err := tui.New(ctx, top, stateDir)
+	model, err := tui.NewWithVersion(ctx, top, stateDir, versionString())
 	if err != nil {
 		return err
 	}
@@ -166,6 +166,8 @@ Environment:
   RUNEWIDTH_EASTASIAN   set to 1 when the terminal draws · → ▌ two columns wide
   XDG_STATE_HOME        where read marks are kept
                         (default ~/.local/state/mirugit)
+  MIRUGIT_NO_UPDATE_CHECK
+                        set to anything: skip the background release check
 
 Keys are listed by ? inside the pane.
 `)

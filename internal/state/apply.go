@@ -76,6 +76,11 @@ func applyNavigation(s State, e Event) (State, bool) {
 		return applyBlockCursorSet(s, e), true
 	case FetchedAgoUpdated:
 		return applyFetchedAgoUpdated(s, e), true
+	case UpdateAvailable:
+		if s.Notice == "" {
+			setNotice(&s, "update available: "+e.Version)
+		}
+		return s, true
 	case HelpOpened:
 		return applyHelpOpened(s), true
 	case HelpClosed:

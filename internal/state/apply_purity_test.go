@@ -44,6 +44,7 @@ func everyEvent() []Event {
 		ScrollSynced{SetList: true, ListTop: 1, SetDiff: true, DiffTop: 1},
 		BlockCursorSet{Block: 0},
 		FetchedAgoUpdated{Label: "3m ago"},
+		UpdateAvailable{Version: "v0.1.3"},
 		Resized{Width: 80, Height: 24},
 		SelectionToggled{Section: SectionUnstaged, Path: "a.txt"},
 		SelectionRangeExtended{From: 0, To: 1},
