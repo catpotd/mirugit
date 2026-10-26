@@ -1,5 +1,9 @@
 version: "2"
 
+run:
+  # Auto-detection uses the preferred toolchain instead of the minimum language version.
+  go: "1.26"
+
 linters:
   enable:
     - errcheck
@@ -24,15 +28,17 @@ linters:
       # switch names every value; the arm that does nothing says so by name.
       default-signifies-exhaustive: false
       # TabCount is the length of the TabCursors array, not a tab.
-      ignore-enum-members: TabCount$
+      ignore-constants:
+        - TabCount$
       # Maps keyed by an enum are dispatch tables too.
       check:
         - switch
-        - map
+        - mapliteral
       # reflect.Kind and go/token.Token belong to the standard library and are
       # switched on by shape rather than by member; naming eighty would say
       # nothing.
-      ignore-enum-types: ^(reflect\.Kind|go/token\.Token)$
+      ignore-types:
+        - ^(reflect\.Kind|go/token\.Token)$
     misspell:
       locale: US
     unparam:

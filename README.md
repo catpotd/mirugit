@@ -94,7 +94,8 @@ Make sure `~/.local/bin` is on your `PATH`.
 archive also holds `THIRD_PARTY_NOTICES.txt`, the license of every module linked
 into the binary.
 
-**`go install`.** Requires Go 1.26 or later. The binary lands in `$GOBIN`, or
+**`go install`.** Requires Go 1.26.10 or later. Use a security-patched Go release.
+The binary lands in `$GOBIN`, or
 `$(go env GOPATH)/bin` when that is unset. `mirugit -version` then reports the
 tag it was built from, because the module system records it.
 

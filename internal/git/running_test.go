@@ -152,7 +152,10 @@ func testStopAllSaysWhenAGitHadToBeKilled(t *testing.T) {
 		t.Error("a git that ignored the term was reported as ended by it")
 	}
 	select {
-	case <-done:
+	case err := <-done:
+		if err == nil {
+			t.Error("the killed git returned no error")
+		}
 	case <-time.After(10 * time.Second):
 		t.Fatal("the git was still running ten seconds after StopAll")
 	}
