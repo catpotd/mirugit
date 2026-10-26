@@ -444,7 +444,7 @@ func cursorRowKinds(s state.State) []struct {
 		by   int
 		what string
 	}
-	seen := map[state.RowKind]bool{}
+	seen := make(map[state.RowKind]bool)
 	for by := -len(s.Rows); by < len(s.Rows); by++ {
 		moved := state.Apply(s, state.CursorMoved{By: by})
 		row, ok := state.CursorRow(moved)

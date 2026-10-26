@@ -369,6 +369,10 @@ func (m *Model) handleMouseWheel(msg tea.MouseWheelMsg) (tea.Model, tea.Cmd, boo
 	case tea.MouseWheelUp:
 		by = -wheelStep
 	case tea.MouseWheelDown:
+	case tea.MouseNone, tea.MouseLeft, tea.MouseMiddle, tea.MouseRight,
+		tea.MouseWheelLeft, tea.MouseWheelRight, tea.MouseBackward, tea.MouseForward,
+		tea.MouseButton10, tea.MouseButton11:
+		return m, nil, true
 	default:
 		return m, nil, true
 	}

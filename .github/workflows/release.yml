@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: stable
+          go-version-file: go.mod
           cache: true
       - name: Identify the test committer
         run: |
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: stable
+          go-version-file: go.mod
           cache: true
       # Building every target from one Linux runner keeps the four binaries on
       # one commit and one toolchain. This program calls no C, so nothing here
@@ -55,6 +55,8 @@ jobs:
               -trimpath \
               -ldflags "-X main.version=${version}" \
               -o "dist/${name}/mirugit" ./cmd/mirugit
+
+            make check-binary BIN="dist/${name}"
             ./tools/notices.sh "dist/${name}/mirugit" "dist/${name}/THIRD_PARTY_NOTICES.txt"
             cp LICENSE README.md "dist/${name}/"
             tar -czf "dist/${name}.tar.gz" -C dist "${name}"

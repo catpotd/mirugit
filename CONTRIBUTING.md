@@ -2,10 +2,14 @@
 
 ## Requirements
 
-- Go 1.26 or later.
+- Go 1.26.10 or later, with security fixes for the release line in use.
 - Git 2.41 or later on `PATH`; the tests create real repositories.
 - Docker to run the full local check on Linux.
 - Network access to download Go modules and the linter on first use.
+
+The preferred Go toolchain in `go.mod` is Go 1.27.3. CI and release builds
+read that version from `go.mod`. The Linux container used by `make ci-local`
+uses the same version. Go can download the preferred toolchain automatically.
 
 ## Set up
 
@@ -39,8 +43,17 @@ make ci-local
 Docker must be running for the Linux checks.
 
 GitHub runs the `ci` workflow for pull requests and pushes to `main`. Run
-`make ci-local` before opening a pull request. The commands below let you rerun
-one gate at a time:
+`make ci-local` before opening a pull request.
+
+The workflow also runs every Monday and can be started manually. Scheduled
+checks include the vulnerability scan, which checks newly published advisories
+without requiring a source change.
+
+`make supply-chain` scans both the source and the built executable. Release
+builds also scan each platform's executable before packaging it. An analyzer
+that cannot finish fails the check.
+
+The commands below let you rerun one gate at a time.
 
 Individual CI commands:
 

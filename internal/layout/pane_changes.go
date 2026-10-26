@@ -29,7 +29,7 @@ func changesPane(s state.State, r ReadMarks, w Renderer, f Frame) Frame {
 func sectionsOf(s state.State, r ReadMarks, w Renderer, win lineWindow) ([]string, []Region) {
 	var lines []string
 	var regions []Region
-	headed := map[state.Section]bool{}
+	headed := make(map[state.Section]bool)
 	for i, row := range s.Rows {
 		switch row.Kind() {
 		case state.RowSectionHeading:

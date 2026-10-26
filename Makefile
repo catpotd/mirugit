@@ -3,14 +3,14 @@ GO ?= go
 # to the module system's answer, which is what go install writes.
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null)
 LDFLAGS := -X main.version=$(VERSION)
-LINTER_VERSION ?= v2.13.1
-VULNCHECK_VERSION ?= v1.7.0
-DEADCODE_VERSION ?= v0.38.0
+LINTER_VERSION ?= v2.15.0
+VULNCHECK_VERSION ?= v1.9.0
+DEADCODE_VERSION ?= v0.52.0
 BIN ?= $(CURDIR)/bin
 
 .DEFAULT_GOAL := check
 
-.PHONY: ci-local build install cross test-race fmt vet check supply-chain fuzz quick tools cover-zero
+.PHONY: ci-local build install cross test-race fmt vet check check-binary deadcode supply-chain fuzz quick tools cover-zero
 
 build:
 	@mkdir -p $(BIN)
@@ -85,9 +85,19 @@ cross:
 supply-chain: build cross
 	$(GO) mod tidy -diff
 	$(GO) run golang.org/x/vuln/cmd/govulncheck@$(VULNCHECK_VERSION) ./...
+	$(MAKE) check-binary
 	./tools/notices.sh $(BIN)/mirugit $(BIN)/THIRD_PARTY_NOTICES.txt
-	@out=$$($(GO) run golang.org/x/tools/cmd/deadcode@$(DEADCODE_VERSION) -test ./... | grep -v '\.event$$'); \
-	if [ -n "$$out" ]; then echo "$$out"; echo "unreachable code above"; exit 1; fi
+	$(MAKE) deadcode
+
+check-binary:
+	$(GO) run golang.org/x/vuln/cmd/govulncheck@$(VULNCHECK_VERSION) -mode=binary $(BIN)/mirugit
+
+deadcode:
+	@deadcode_output=$$($(GO) run golang.org/x/tools/cmd/deadcode@$(DEADCODE_VERSION) -test ./...) || { \
+		deadcode_status=$$?; printf '%s\n' "$$deadcode_output"; exit "$$deadcode_status"; \
+	}; \
+	deadcode_output=$$(printf '%s\n' "$$deadcode_output" | sed '/\.event$$/d') || exit $$?; \
+	if [ -n "$$deadcode_output" ]; then printf '%s\n' "$$deadcode_output"; echo "unreachable code above"; exit 1; fi
 
 CI_GATES := check test-race fuzz supply-chain
 
@@ -99,7 +109,7 @@ CI_GATES := check test-race fuzz supply-chain
 # git needs an identity before internal/tui can commit, and it refuses a
 # directory owned by another user without safe.directory. Both are what the ci
 # workflow set.
-LINUX_IMAGE ?= golang:1.26
+LINUX_IMAGE ?= golang:1.27.3
 CI_FUZZTIME ?= 30s
 
 ci-local: export VERSION := $(VERSION)
